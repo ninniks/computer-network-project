@@ -1,6 +1,6 @@
-const passport = require('passport');
+import passport from 'passport';
 
-module.exports = app => {
+export default (app) => {
   //sending auth request to google with the scoope
   app.get(
     '/auth/google',
@@ -8,16 +8,18 @@ module.exports = app => {
       scope: ['profile', 'email']
     })
   );
-  
+
   //if I obtained the grant i redirect to /api/current_user
   app.get('/auth/google/callback', passport.authenticate('google'), (req, res) =>{
     res.redirect('http://localhost:3000');
   });
 
   //route to logout
-  app.get('/api/logout', (req, res) => {
-    req.logout();
-    res.redirect('/');
+  app.get('/api/logout', (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.redirect('/');
+    });
   });
 
   //just seeing user info
