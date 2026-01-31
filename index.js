@@ -1,22 +1,25 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cookieSession = require('cookie-session');
-const passport = require('passport');
-const bodyParser = require('body-parser');
+import 'dotenv/config';
+import express from 'express';
+import mongoose from 'mongoose';
+import cookieSession from 'cookie-session';
+import passport from 'passport';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
-require('./models/User');
-require('./models/Booking');
-require('./services/passport');
+import './models/User.js';
+import './models/Booking.js';
+import './services/passport.js';
 
+import authRoutes from './routes/authRoutes.js';
+import apiRoutes from './routes/apiRoutes.js';
 
 const url = "mongodb+srv://admin:"+process.env.MONGO_PASSWORD+"@cluster0.ayla2.mongodb.net/"+process.env.DB_NAME+"?retryWrites=true&w=majority";
-mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true});
+await mongoose.connect(url);
 
-var app = express();
-var http = require('http').createServer(app);
+const app = express();
+const http = createServer(app);
 
-const io = require("socket.io")(http, {
+const io = new Server(http, {
     cors: {
       origin: "http://localhost:3000",
       methods: ["GET", "POST"],
@@ -25,10 +28,10 @@ const io = require("socket.io")(http, {
     },
 });
 
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-//using cookie session 
+//using cookie session
 app.use(
     cookieSession({
         maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -44,7 +47,7 @@ app.get('/', (req, res) =>{
     res.send('<a href="/auth/google">Sign In with Google</a>');
 });
 
-require('./routes/authRoutes')(app);
-require('./routes/apiRoutes')(app, io);
+authRoutes(app);
+apiRoutes(app, io);
 
 http.listen(8000);

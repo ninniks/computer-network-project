@@ -1,6 +1,6 @@
-var passport = require('passport');
-var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-const mongoose = require('mongoose');
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import mongoose from 'mongoose';
 
 //opening USer model define in User.js
 const User = mongoose.model('users');
@@ -27,13 +27,13 @@ passport.use(new GoogleStrategy({
     //if I find a User in the DB call done function else save the record and call done function
     async (accessToken, refreshToken, profile, done) => {
         const existingUser = await User.findOne({ googleID: profile.id});
-        
+
         if(existingUser){
             //profile id existing
             return done(null, existingUser);
-        } 
-        
+        }
+
         const user = await new User({ googleID: profile.id, name: profile.displayName, photo: profile._json.picture }).save()
-        done(null, user);  
+        done(null, user);
     }
 ));

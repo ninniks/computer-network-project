@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
-//creating user Schema with Mongoose driver 
+//creating user Schema with Mongoose driver
 const bookingSchema = new Schema({
        date: Date,
        userID: String
