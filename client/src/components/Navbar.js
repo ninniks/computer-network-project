@@ -1,64 +1,60 @@
-import { connect } from 'react-redux';
-import React, { Component } from 'react';
-import { Menu, Avatar, Spin, Space } from 'antd';
-import { LogoutOutlined, GoogleOutlined, LoadingOutlined, UserOutlined, HomeOutlined, UnorderedListOutlined } from '@ant-design/icons'
-import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { logout as authLogout } from '../services/auth';
+import { logout } from '../store/authSlice';
+import Logo from './Logo';
+import NotificationBell from './NotificationBell';
 
+function Navbar() {
+  const auth = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
+  const handleLogout = async () => {
+    await authLogout();
+    dispatch(logout());
+  };
 
+  return (
+    <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'grey.200' }}>
+      <Toolbar sx={{ justifyContent: 'space-between' }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Logo size={32} />
+          <Typography
+            variant="h5"
+            component="div"
+            sx={{
+              fontFamily: '"Poppins", sans-serif',
+              fontWeight: 700,
+              color: 'primary.main',
+            }}
+          >
+            MeetApp
+          </Typography>
+        </Stack>
 
-class Navbar extends Component {
-
-  renderContent(){
-    switch (this.props.auth.data){
-      case null:
-        return( <Spin icon={antIcon} />);
-      case false:
-        return (
-         <Space size={10}>
-          <GoogleOutlined />
-         <a href='/auth/google'>Login with Google</a>
-         </Space>
-        );
-      default:
-        return (
-          <div>
-          <Space>
-          <b>{this.props.auth.data.name}</b>
-          <Avatar style={{marginLeft: '15px'}} size="large" src={this.props.auth.data.photo}icon={<UserOutlined />} />
-          <a href='/api/logout'><LogoutOutlined style={{marginLeft: '20px'}}/></a>
-          </Space>
-          </div>
-        );
-    }
-  }
-
-  render(){
-      return (
-        <div>
-        <div className="logo" />
-        <Menu mode="horizontal" defaultSelectedKeys={['1']}>
-          <Menu.Item style={{paddingLeft: '20px'}} icon={<HomeOutlined />} key="1">Home
-          <Link to='/'/>
-          </Menu.Item>
-          <Menu.Item icon={<UnorderedListOutlined />} key="2">My Bookings
-          <Link to='/book' />
-          </Menu.Item>
-          <div style ={{position:'inline', float: 'right', paddingRight: '40px'}}>
-          {this.renderContent()}
-          </div>
-        </Menu>
-        </div>
-      );
-    }
+        {auth.isAuthenticated && auth.data && (
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography fontWeight="medium">{auth.data.name}</Typography>
+            <Avatar
+              sx={{ width: 36, height: 36 }}
+              src={auth.data.photo}
+              alt={auth.data.name}
+            />
+            <NotificationBell />
+            <IconButton onClick={handleLogout} size="small" aria-label="Logout">
+              <LogoutIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
 }
 
-
-function mapStateToProps({ auth }){
-  return { auth };
-}
-
-
-
-export default connect(mapStateToProps)(Navbar);
+export default Navbar;

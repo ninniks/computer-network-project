@@ -1,38 +1,56 @@
 import './App.css';
-import 'antd/dist/antd.css';
-import React, { Component } from 'react';
-import { BrowserRouter, Route } from 'react-router-dom';
-import { connect } from 'react-redux'; //to call action creators 
-import * as actions from './actions';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { it } from 'date-fns/locale';
+import { ToastProvider } from './contexts/ToastContext';
+import theme from './theme';
+import { initializeAuth } from './store/authSlice';
 import Navbar from './components/Navbar';
-import Booking from './components/Booking';
-import Home from './components/Home';
-import { Layout } from 'antd';
-import PrivateRoute from './components/PrivateRoute';
-import Login from './components/Login';
+import LoginCard from './components/LoginCard';
+import FullPageCalendar from './components/FullPageCalendar';
+import AuthCallback from './components/AuthCallback';
 
+function AppContent() {
+  const dispatch = useDispatch();
+  const auth = useSelector(state => state.auth);
 
-class App extends Component {
-  async componentDidMount() {
-    await this.props.fetchUser();
-  }
-  
-  render(){
-    return(<div>
-      <BrowserRouter>
-        <Layout>
-          <Route path = '/' component={Navbar} />
-          <Route exact path= '/' component={Home} />
-          <PrivateRoute component={Booking} auth={this.props.auth} path='/book'/>
-          <Route exact path='/login' component={Login} />
-        </Layout>
-      </BrowserRouter>
-    </div>);
-  }
-};
+  useEffect(() => {
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
-function mapStateToProps({ auth }) {
-  return { auth };
+  return (
+    <BrowserRouter>
+      <Box sx={{ minHeight: '100vh' }}>
+        {auth.isAuthenticated && <Navbar />}
+        <Routes>
+          <Route
+            path='/'
+            element={auth.isAuthenticated ? <FullPageCalendar /> : <LoginCard />}
+          />
+          <Route path='/auth/callback' element={<AuthCallback />} />
+        </Routes>
+      </Box>
+    </BrowserRouter>
+  );
 }
 
-export default connect(mapStateToProps, actions)(App);
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={it}>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
