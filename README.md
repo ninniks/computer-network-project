@@ -1,167 +1,126 @@
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Thanks again! Now go create something AMAZING! :D
--->
+# MeetApp
 
+A full-stack meeting scheduling application with Google OAuth, recurring events, real-time notifications, and map-based location picking.
 
+## Tech Stack
 
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-[![Contributors][contributors-shield]][contributors-url]
+| Layer | Technologies |
+|---|---|
+| **Backend** | Node.js, Express 5, MongoDB (Mongoose), Socket.IO, JWT, Passport |
+| **Frontend** | React 19, Redux Toolkit, Material UI 6, react-big-calendar, Leaflet |
 
+## Architecture
 
+The backend follows a layered architecture:
 
+```
+Routes → Controllers → Services → DAL → Models
+```
 
-<!-- PROJECT LOGO -->
-<br />
-<p align="center">
-  <h3 align="center">My Bookings</h3>
+- **Routes** define endpoints and wire up middleware (auth, validation)
+- **Controllers** handle HTTP request/response and emit Socket.IO events
+- **Services** contain business logic (CRUD, RSVP, rrule expansion)
+- **DAL** (Data Access Layer) wraps Mongoose queries
+- **Models** define MongoDB schemas
 
-  <p align="center">
-    Computer Networks Project - La Sapienza <br />
-    My Booking is a Web Application that allows you to schedule meetings on a calendar.
-    <br />
-    <br/>
-    <a href="https://app.swaggerhub.com/apis-docs/ninniks/MyBooking/1.0.0"><strong>Explore the API docs in Swagger »</strong></a>
-    <br />
-    <br />
-  </p>
-</p>
+Validation uses Zod schemas applied via `validate()` middleware.
 
-![Product Name Screen Shot][product-screenshot]
+## Features
 
+- Google OAuth 2.0 login with PKCE flow
+- Meeting CRUD with title, description, location, date/time
+- Recurring events via rrule (daily, weekly, monthly, etc.)
+- RSVP per single occurrence or all occurrences
+- Participant management (add/remove, default status)
+- Real-time notifications via Socket.IO
+- Interactive map-based location picker (Leaflet)
+- Full calendar view (react-big-calendar)
+- User search for adding participants
 
+## Prerequisites
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
+- Node.js (v18+)
+- MongoDB instance
+- Google OAuth 2.0 credentials (Client ID + Client Secret)
 
+## Setup
 
+```bash
+# Clone the repository
+git clone <repo-url>
+cd computer-network-project
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+# Install backend dependencies
+npm install
 
-<strong>Requirements</strong>
-<p>
-<ul>
-<li> REST service (called SERV) offers API documented with Swagger (for ex.)</li>
-<li>SERV must interface with two outer REST API, i.e not on localhost (e.g google maps)</li>
-<li>At the least one of two outer REST services must be 'commercial' (e.g: twitter, google, facebook, pubnub, parse, firbase etc)</li>
-<li>At the least one of two outer REST services must require oauth (e.g. google calendar)</li>
-<li>Must use Websocket and/or AMQP</li>
-<li>Project must be uploaded on GIT</li>
-<li>SERV API must be documented and tested with one test case</li>
-</ul>
-</p>
+# Install frontend dependencies
+npm install --prefix client
 
+# Start both backend and frontend in development mode
+npm run dev
+```
 
-### Built With
+## Environment Variables
 
+### Root `.env`
 
-* [ReactJS](https://it.reactjs.org)
-* [Redux](https://redux.js.org/)
-* [NodeJS](https://nodejs.org/it/)
-* [Express](https://expressjs.com/it/)
-* [MongoDB](https://www.mongodb.com/)
-* [PassportJS](http://www.passportjs.org/)
+| Variable | Description |
+|---|---|
+| `MONGO_USERNAME` | MongoDB username |
+| `MONGO_PASSWORD` | MongoDB password |
+| `DB_NAME` | MongoDB database name |
+| `CLIENT_ID` | Google OAuth Client ID |
+| `CLIENT_SECRET` | Google OAuth Client Secret |
+| `JWT_SECRET` | Secret for signing access tokens |
+| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens |
 
+### `client/.env.development`
 
+| Variable | Description |
+|---|---|
+| `REACT_APP_API_URL` | Backend API base URL (e.g. `http://localhost:5000`) |
+| `REACT_APP_SOCKET_URL` | Socket.IO server URL (e.g. `http://localhost:5000`) |
 
-<!-- GETTING STARTED -->
-## Getting Started
+## API Endpoints
 
-To start Application you need to configure <b>.env</b> file on your local repository.<br/>
+All API routes are prefixed with `/api/v1`. Protected routes require a `Bearer` token in the `Authorization` header.
 
-* .env
-	```sh
-	CLIENT_ID = 
-	CLIENT_SECRET =
-	MONGO_PASSWORD = 
-	DB_NAME =
-	COOKIE_KEY = 
-	```
-<b>CLIENT_ID</b> and <b>CLIENT_SECRET</b> are provided by Google to implement OAUTH.<br />
-Then you need to configure MongoDB and provide <b>MONGO_PASSWORD</b> and <b>DB_NAME</b> <br />
-<b>COOKIE_KEY</b> is used by PassportJS to encrypt user cookie.
+### Auth
 
-### Prerequisites
+| Method | Path | Description |
+|---|---|---|
+| GET | `/auth/google` | Initiate Google OAuth (with PKCE `code_challenge`) |
+| GET | `/auth/google/callback` | OAuth callback (redirects to frontend) |
+| POST | `/api/v1/auth/token` | Exchange auth code for token pair |
+| POST | `/api/v1/auth/refresh` | Refresh access token |
+| POST | `/api/v1/auth/logout` | Invalidate refresh token |
+| GET | `/api/v1/users/me` | Get current authenticated user |
 
+### Meetings
 
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
- * node 
- ```sh
- npm install nodejs@latest -g
- ```
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/v1/meetings` | Create a meeting |
+| GET | `/api/v1/meetings` | List meetings by date range |
+| GET | `/api/v1/meetings/:id` | Get a single meeting |
+| PUT | `/api/v1/meetings/:id` | Update a meeting |
+| DELETE | `/api/v1/meetings/:id` | Delete a meeting |
+| GET | `/api/v1/users/me/meetings` | Get current user's meetings |
+| POST | `/api/v1/meetings/:id/rsvp` | RSVP to a single occurrence |
+| POST | `/api/v1/meetings/:id/rsvp/all` | RSVP to all occurrences |
+| POST | `/api/v1/meetings/:id/participants` | Add a participant |
+| DELETE | `/api/v1/meetings/:id/participants` | Remove a participant |
 
+### Users
 
-### Installation
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/users/search` | Search users by name or email |
 
-1. Get a free API Key at [Google Console Developers](https://console.developers.google.com/) for OAUTH
-2. Clone the repo
-   ```sh
-   git clone https://github.com/ninniks/Computer-Networks-project
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Create .env file in your local repo (in top level directory)
+### Notifications
 
-5. Set up env variables 
-
-6. Run the project
-   ```sh
-   npm run dev
-   ```
-
-
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-
-
-<!-- CONTACT -->
-## Contact
-
-
-Project Link: [https://github.com/ninniks/Computer-Networks-project](https://github.com/ninniks/Computer-Networks-project)
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/ninniks/Computer-Networks-project?style=for-the-badge
-[contributors-url]: https://github.com/ninniks/Computer-Networks-project/graphs/contributors
-[product-screenshot]: images/screenshot.png
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/notifications` | Get unacknowledged notifications |
+| PATCH | `/api/v1/notifications/ack-all` | Acknowledge all notifications |
+| PATCH | `/api/v1/notifications/:id/ack` | Acknowledge a single notification |

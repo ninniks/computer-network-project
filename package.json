@@ -15,14 +15,20 @@
   "license": "ISC",
   "dependencies": {
     "concurrently": "^9.2.1",
+    "cookie-parser": "^1.4.7",
     "cookie-session": "^2.1.1",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "lodash-es": "^4.17.21",
     "mongoose": "^9.1.4",
+    "morgan": "^1.10.1",
     "nodemon": "^3.1.11",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "socket.io": "^4.8.3"
+    "rrule": "^2.8.1",
+    "socket.io": "^4.8.3",
+    "zod": "^4.3.6"
   }
 }

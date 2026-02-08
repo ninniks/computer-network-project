@@ -1,53 +1,60 @@
 import 'dotenv/config';
 import express from 'express';
-import mongoose from 'mongoose';
-import cookieSession from 'cookie-session';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import passport from 'passport';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import morgan from 'morgan';
 
-import './models/User.js';
-import './models/Booking.js';
-import './services/passport.js';
+import { connectDatabase } from './config/database.config.js';
+import { configurePassport } from './config/passport.config.js';
+import { configureSocket } from './config/socket.config.js';
 
-import authRoutes from './routes/authRoutes.js';
-import apiRoutes from './routes/apiRoutes.js';
+import authRoutes from './routes/auth.routes.js';
+import createMeetingRoutes from './routes/meeting.routes.js';
+import userRoutes from './routes/user.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 
-const url = "mongodb+srv://admin:"+process.env.MONGO_PASSWORD+"@cluster0.ayla2.mongodb.net/"+process.env.DB_NAME+"?retryWrites=true&w=majority";
-await mongoose.connect(url);
+await connectDatabase();
+
+configurePassport();
 
 const app = express();
 const http = createServer(app);
+app.use(morgan('tiny'))
 
 const io = new Server(http, {
-    cors: {
-      origin: "http://localhost:3000",
-      methods: ["GET", "POST"],
-      allowedHeaders: ["my-custom-header"],
-      credentials: true
-    },
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['my-custom-header', 'Authorization'],
+    credentials: true
+  }
 });
 
+configureSocket(io);
+
+app.use(cookieParser());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-//using cookie session
-app.use(
-    cookieSession({
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        keys: [process.env.COOKIE_KEY]
-    })
-);
-
-//inizialize passport for cookies
+// Solo passport.initialize(), NO session
 app.use(passport.initialize());
-app.use(passport.session());
 
-app.get('/', (req, res) =>{
-    res.send('<a href="/auth/google">Sign In with Google</a>');
+app.get('/', (req, res) => {
+  res.send('<a href="/auth/google">Sign In with Google</a>');
 });
 
-authRoutes(app);
-apiRoutes(app, io);
+app.use(authRoutes);
+app.use(userRoutes);
+app.use(notificationRoutes);
+app.use(createMeetingRoutes(io));
 
-http.listen(8000);
+http.listen(8000, () => {
+  console.info('Express server is running on port 8000');
+});
