@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { it } from 'date-fns/locale';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -198,6 +198,20 @@ function FullPageCalendar() {
   }, [dispatch]);
 
   useMeetingSocket(refetchRange);
+
+
+  useEffect(() => {
+    const now = currentDate;
+    const start = startOfWeek(startOfMonth(now), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(now), { weekStartsOn: 1 });
+    end.setHours(23, 59, 59);
+    const rangeData = {
+      start: start.toISOString(),
+      end: end.toISOString(),
+    };
+    visibleRangeRef.current = rangeData;
+    dispatch(fetchMeetingsByRange(rangeData));
+  }, [dispatch]);
 
   const handleRangeChange = useCallback(
     (range) => {
