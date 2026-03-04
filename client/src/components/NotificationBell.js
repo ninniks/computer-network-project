@@ -16,6 +16,7 @@ import {
   acknowledgeNotification,
   acknowledgeAllNotifications,
 } from '../store/notificationsSlice';
+import { setPendingOpenMeetingId } from '../store/meetingsSlice';
 
 const TYPE_LABELS = {
   meeting_created: 'Nuovo incontro',
@@ -46,8 +47,12 @@ function NotificationBell() {
   const handleOpen = (e) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
-  const handleAck = (id) => {
-    dispatch(acknowledgeNotification(id));
+  const handleNotificationClick = (n) => {
+    dispatch(acknowledgeNotification(n._id));
+    if (n.meeting && n.type !== 'meeting_cancelled') {
+      dispatch(setPendingOpenMeetingId(n.meeting));
+    }
+    handleClose();
   };
 
   const handleAckAll = () => {
@@ -90,7 +95,7 @@ function NotificationBell() {
         ) : (
           <List dense disablePadding sx={{ overflow: 'auto', maxHeight: 340 }}>
             {items.map((n) => (
-              <ListItemButton key={n._id} onClick={() => handleAck(n._id)}>
+              <ListItemButton key={n._id} onClick={() => handleNotificationClick(n)}>
                 <ListItemText
                   primary={TYPE_LABELS[n.type] || n.type}
                   secondary={

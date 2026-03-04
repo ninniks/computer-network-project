@@ -129,6 +129,7 @@ const initialState = {
   saving: false,
   userSearchResults: [],
   userSearchLoading: false,
+  pendingOpenMeetingId: null,
 };
 
 const meetingsSlice = createSlice({
@@ -137,6 +138,12 @@ const meetingsSlice = createSlice({
   reducers: {
     clearActiveMeeting: (state) => {
       state.activeMeeting = null;
+    },
+    setPendingOpenMeetingId: (state, action) => {
+      state.pendingOpenMeetingId = action.payload;
+    },
+    clearPendingOpenMeetingId: (state) => {
+      state.pendingOpenMeetingId = null;
     },
     applySocketUpdate: (state, action) => {
       const meeting = action.payload;
@@ -216,6 +223,6 @@ const meetingsSlice = createSlice({
   },
 });
 
-export const { clearActiveMeeting, applySocketUpdate, removeMeetingFromList } =
+export const { clearActiveMeeting, applySocketUpdate, removeMeetingFromList, setPendingOpenMeetingId, clearPendingOpenMeetingId } =
   meetingsSlice.actions;
 export default meetingsSlice.reducer;

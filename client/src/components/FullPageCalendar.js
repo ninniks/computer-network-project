@@ -14,7 +14,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchMeetingsByRange } from '../store/meetingsSlice';
+import { fetchMeetingsByRange, fetchMeetingById, clearPendingOpenMeetingId } from '../store/meetingsSlice';
 import { useMeetingSocket } from '../hooks/useMeetingSocket';
 import MeetingFormDialog from './MeetingFormDialog';
 import MeetingDetailDialog from './MeetingDetailDialog';
@@ -179,7 +179,7 @@ function CustomEvent({ event }) {
 
 function FullPageCalendar() {
   const dispatch = useDispatch();
-  const { occurrences, loading } = useSelector((state) => state.meetings);
+  const { occurrences, loading, pendingOpenMeetingId } = useSelector((state) => state.meetings);
 
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -199,6 +199,22 @@ function FullPageCalendar() {
 
   useMeetingSocket(refetchRange);
 
+  useEffect(() => {
+    if (!pendingOpenMeetingId) return;
+    dispatch(fetchMeetingById(pendingOpenMeetingId))
+      .unwrap()
+      .then((meeting) => {
+        setSelectedOccurrence({
+          meeting,
+          start: new Date(meeting.startDateTime),
+          end: new Date(meeting.endDateTime),
+        });
+        setDetailOpen(true);
+      })
+      .finally(() => {
+        dispatch(clearPendingOpenMeetingId());
+      });
+  }, [pendingOpenMeetingId, dispatch]);
 
   useEffect(() => {
     const now = currentDate;
