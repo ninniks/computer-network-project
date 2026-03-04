@@ -1,14 +1,18 @@
 import Meeting from '../models/Meeting.model.js';
 
 export const findById = async (id) => {
-  return Meeting.findById(id);
+  return Meeting.findById(id)
+    .populate('author', 'name email photo')
+    .populate('participants.user', 'name email photo');
 };
 
 export const findByDateRange = async (rangeStart, rangeEnd) => {
   return Meeting.find({
     startDateTime: { $lte: rangeEnd },
     endDateTime: { $gte: rangeStart }
-  });
+  })
+    .populate('author', 'name email photo')
+    .populate('participants.user', 'name email photo');
 };
 
 export const findByParticipant = async (userId) => {
@@ -17,7 +21,9 @@ export const findByParticipant = async (userId) => {
 
 export const createMeeting = async (meetingData) => {
   const meeting = new Meeting(meetingData);
-  return meeting.save();
+  await meeting.save();
+  await meeting.populate('author', 'name email photo');
+  return meeting.populate('participants.user', 'name email photo');
 };
 
 export const updateMeeting = async (id, updateData) => {
