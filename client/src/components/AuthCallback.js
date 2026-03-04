@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import { exchangeCodeForTokens } from '../services/auth';
-import { loginSuccess } from '../store/authSlice';
+import { fetchUser } from '../store/authSlice';
 
 function AuthCallback() {
     const [error, setError] = useState(null);
@@ -30,8 +30,8 @@ function AuthCallback() {
             }
 
             try {
-                const data = await exchangeCodeForTokens(code);
-                dispatch(loginSuccess(data.user));
+                await exchangeCodeForTokens(code);
+                await dispatch(fetchUser()).unwrap();
                 navigate('/');
             } catch (err) {
                 const errorMessage = err.response?.data?.error || err.message || 'Authentication failed';
