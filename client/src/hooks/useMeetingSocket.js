@@ -44,9 +44,7 @@ export function useMeetingSocket(refetchRange) {
           dispatch(removeMeetingFromList(notification.message.id));
           break;
         case 'rsvp_updated':
-          if (activeMeetingRef.current?._id === notification.message.meetingId) {
-            if (refetchRef.current) refetchRef.current();
-          }
+          if (refetchRef.current) refetchRef.current();
           break;
         default:
           break;

@@ -273,6 +273,16 @@ function FullPageCalendar() {
     setDetailOpen(true);
   }, []);
 
+  useEffect(() => {
+    if (!detailOpen || !selectedOccurrence) return;
+    const fresh = occurrences.find(
+      (occ) =>
+        occ.meeting._id === selectedOccurrence.meeting._id &&
+        occ.start === selectedOccurrence.start
+    );
+    if (fresh) setSelectedOccurrence(fresh);
+  }, [occurrences]);
+
   const handleFormClose = useCallback(() => {
     setFormOpen(false);
     setDefaultStart(null);

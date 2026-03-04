@@ -22,6 +22,7 @@ function expandOccurrences(meeting, rangeStart, rangeEnd) {
 // --- RSVP Operations ---
 
 export async function rsvpSingle(meetingId, userId, occurrenceStart, status) {
+  await meetingDal.updateParticipantDefaultStatus(meetingId, userId, status);
   return attendanceDal.upsertAttendance(meetingId, userId, occurrenceStart, status);
 }
 
